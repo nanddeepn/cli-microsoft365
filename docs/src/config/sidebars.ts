@@ -1313,6 +1313,11 @@ const sidebars: SidebarsConfig = {
               type: 'doc',
               label: 'calendar get',
               id: 'cmd/outlook/calendar/calendar-get'
+            },
+            {
+              type: 'doc',
+              label: 'calendar remove',
+              id: 'cmd/outlook/calendar/calendar-remove'
             }
           ]
         },

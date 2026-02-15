@@ -5,7 +5,7 @@ import { cli } from '../cli/cli.js';
 import request, { CliRequestOptions } from '../request.js';
 
 export const calendar = {
-  async getUserCalendarById(userId: string, calendarId:string, calendarGroupId?: string, properties?: string): Promise<Calendar> {
+  async getUserCalendarById(userId: string, calendarId: string, calendarGroupId?: string, properties?: string): Promise<Calendar> {
     let url = `https://graph.microsoft.com/v1.0/users('${userId}')/${calendarGroupId ? `calendarGroups/${calendarGroupId}/` : ''}calendars/${calendarId}`;
 
     if (properties) {
@@ -37,7 +37,7 @@ export const calendar = {
     }
 
     if (calendars.length > 1) {
-      const resultAsKeyValuePair = formatting.convertArrayToHashTable('id', calendars );
+      const resultAsKeyValuePair = formatting.convertArrayToHashTable('id', calendars);
       const selectedCalendar = await cli.handleMultipleResultsFound<Calendar>(`Multiple calendars with name '${name}' found.`, resultAsKeyValuePair);
       return selectedCalendar;
     }
