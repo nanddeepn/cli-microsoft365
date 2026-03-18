@@ -259,7 +259,7 @@ class SpoListSetCommand extends SpoCommand {
       actions += `<SetProperty Id="${nextActionId++}" ObjectPathId="${versionPoliciesId}" Name="DefaultTrimMode"><Parameter Type="Int32">0</Parameter></SetProperty>`;
     }
 
-    actions += `<Method Name="Update" Id="${nextActionId++}" ObjectPathId="${listObjectPathId}" />`;
+    actions += `<Method Name="Update" Id="${nextActionId}" ObjectPathId="${listObjectPathId}" />`;
 
     const csomRequestOptions: CliRequestOptions = {
       url: `${options.webUrl}/_vti_bin/client.svc/ProcessQuery`,
