@@ -49,6 +49,25 @@ Some checks must be done manually, because there are no APIs available to verify
 
 When you check the compatibility with all UXs, and there are multiple checks with the same ID, the command will use the first matching check, following the order listed above.
 
+## Permissions
+
+<Tabs>
+  <TabItem value="Delegated">
+
+  | Resource        | Permissions                          |
+  |-----------------|--------------------------------------|
+  | Microsoft Graph | ExternalConnection.ReadWrite.OwnedBy |
+
+  </TabItem>
+  <TabItem value="Application">
+
+  | Resource        | Permissions                          |
+  |-----------------|--------------------------------------|
+  | Microsoft Graph | ExternalConnection.ReadWrite.OwnedBy |
+
+  </TabItem>
+</Tabs>
+
 ## Examples
 
 Checks if the external connection with the specified ID is correctly configured for use with Copilot for Microsoft 365.

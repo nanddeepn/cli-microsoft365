@@ -1,4 +1,6 @@
 import Global from '../../_global.mdx';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # external connection add
 
@@ -37,6 +39,25 @@ m365 search externalconnection add
 ## Remarks
 
 The `id` must be at least 3 and no more than 32 characters long. It can contain only alphanumeric characters, can't begin with _Microsoft_ and can be any of the following values: *None, Directory, Exchange, ExchangeArchive, LinkedIn, Mailbox, OneDriveBusiness, SharePoint, Teams, Yammer, Connectors, TaskFabric, PowerBI, Assistant, TopicEngine, MSFT_All_Connectors*.
+
+## Permissions
+
+<Tabs>
+  <TabItem value="Delegated">
+
+  | Resource        | Permissions                          |
+  |-----------------|--------------------------------------|
+  | Microsoft Graph | ExternalConnection.ReadWrite.OwnedBy |
+
+  </TabItem>
+  <TabItem value="Application">
+
+  | Resource        | Permissions                          |
+  |-----------------|--------------------------------------|
+  | Microsoft Graph | ExternalConnection.ReadWrite.OwnedBy |
+
+  </TabItem>
+</Tabs>
 
 ## Examples
 
