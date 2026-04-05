@@ -28,9 +28,26 @@ m365 entra user license list [options]
 
 :::tip
 
-If you don't specify any option, the command will list the license details of the current logged in user. This does not work when using application permissions.
+If you don't specify any option, the command will list the license details of the current logged in user.
 
 :::
+
+## Permissions
+
+<Tabs>
+  <TabItem value="Delegated">
+
+  | Resource        | Permissions                |
+  |-----------------|----------------------------|
+  | Microsoft Graph | LicenseAssignment.Read.All |
+
+  </TabItem>
+  <TabItem value="Application">
+
+  This command does not support application permissions.
+
+  </TabItem>
+</Tabs>
 
 ## Examples
 
