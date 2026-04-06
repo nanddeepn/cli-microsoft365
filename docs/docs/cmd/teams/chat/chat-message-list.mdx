@@ -18,8 +18,17 @@ m365 teams chat message list [options]
 `-i, --chatId <chatId>`
 : The ID of the chat conversation.
 
-`--endDateTime [endDateTime]`
+`--createdEndDateTime [createdEndDateTime]`
 : Time indicating the exclusive end of a time range when the message was created.
+
+`--endDateTime [endDateTime]`
+: (deprecated. Use `createdEndDateTime` instead) Time indicating the exclusive end of a time range when the message was created.
+
+`--modifiedStartDateTime [modifiedStartDateTime]`
+: Time indicating the inclusive start of a time range when the message was last modified. Cannot be combined with `createdEndDateTime`.
+
+`--modifiedEndDateTime [modifiedEndDateTime]`
+: Time indicating the exclusive end of a time range when the message was last modified. Cannot be combined with `createdEndDateTime`.
 ```
 
 <Global />
@@ -54,7 +63,19 @@ m365 teams chat message list --chatId 19:2da4c29f6d7041eca70b638b43d45437@thread
 List messages from a Microsoft Teams chat conversation created before November 1, 2022
 
 ```sh
-m365 teams chat message list --chatId 19:2da4c29f6d7041eca70b638b43d45437@thread.v2 --endDateTime 2022-11-01T00:00:00Z
+m365 teams chat message list --chatId 19:2da4c29f6d7041eca70b638b43d45437@thread.v2 --createdEndDateTime 2022-11-01T00:00:00Z
+```
+
+List messages from a Microsoft Teams chat conversation modified after October 1, 2025
+
+```sh
+m365 teams chat message list --chatId 19:2da4c29f6d7041eca70b638b43d45437@thread.v2 --modifiedStartDateTime 2025-10-01T00:00:00Z
+```
+
+List messages from a Microsoft Teams chat conversation modified between October 1, 2025 and November 1, 2025
+
+```sh
+m365 teams chat message list --chatId 19:2da4c29f6d7041eca70b638b43d45437@thread.v2 --modifiedStartDateTime 2025-10-01T00:00:00Z --modifiedEndDateTime 2025-11-01T00:00:00Z
 ```
 
 ## Response
