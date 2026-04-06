@@ -5,6 +5,7 @@ export default {
   CALENDAR_GET: `${prefix} calendar get`,
   CALENDAR_REMOVE: `${prefix} calendar remove`,
   CALENDARGROUP_LIST: `${prefix} calendargroup list`,
+  EVENT_CANCEL: `${prefix} event cancel`,
   EVENT_LIST: `${prefix} event list`,
   MAIL_SEARCHFOLDER_ADD: `${prefix} mail searchfolder add`,
   MAIL_SEND: `${prefix} mail send`,
