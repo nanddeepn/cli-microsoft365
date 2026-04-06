@@ -1341,6 +1341,11 @@ const sidebars: SidebarsConfig = {
               type: 'doc',
               label: 'event list',
               id: 'cmd/outlook/event/event-list'
+            },
+            {
+              type: 'doc',
+              label: 'event remove',
+              id: 'cmd/outlook/event/event-remove'
             }
           ]
         },
