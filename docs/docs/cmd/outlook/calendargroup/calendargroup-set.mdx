@@ -1,0 +1,83 @@
+import Global from '../../_global.mdx';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# outlook calendargroup set
+
+Updates a calendar group for a user.
+
+## Usage
+
+```sh
+m365 outlook calendargroup set [options]
+```
+
+## Options
+
+```md definition-list
+`--id [id]`
+: ID of the calendar group. Specify either `id` or `name`, but not both.
+
+`--name [name]`
+: Name of the calendar group. Specify either `id` or `name`, but not both.
+
+`--userId [userId]`
+: ID of the user. Specify either `userId` or `userName`, but not both.
+
+`--userName [userName]`
+: UPN of the user. Specify either `userId` or `userName`, but not both.
+
+`--newName <newName>`
+: New name of the calendar group.
+```
+
+<Global />
+
+## Permissions
+
+<Tabs>
+  <TabItem value="Delegated">
+
+  | Resource        | Permissions                            |
+  |-----------------|----------------------------------------|
+  | Microsoft Graph | Calendars.ReadWrite, Calendars.ReadWrite.Shared |
+
+  </TabItem>
+  <TabItem value="Application">
+
+  | Resource        | Permissions          |
+  |-----------------|----------------------|
+  | Microsoft Graph | Calendars.ReadWrite  |
+
+  </TabItem>
+</Tabs>
+
+:::note
+
+When using delegated permissions, specifying `userId` or `userName` for a different user requires the `Calendars.ReadWrite.Shared` scope. When the specified user matches the signed-in user, no shared scope is needed.
+
+:::
+
+## Examples
+
+Update the calendar group specified by name for the current user.
+
+```sh
+m365 outlook calendargroup set --name "Personal Evts" --newName "Personal Events"
+```
+
+Update the calendar group specified by id for a user.
+
+```sh
+m365 outlook calendargroup set --id "AAMkADIxYjJiYm" --newName "Personal Events" --userId "44288f7d-7710-4293-8c8e-36f310ed2e6a"
+```
+
+Update the calendar group specified by name for a user specified by email.
+
+```sh
+m365 outlook calendargroup set --name "Personal Evts" --newName "Personal Events" --userName "john.doe@contoso.com"
+```
+
+## Response
+
+The command won't return a response on success.
