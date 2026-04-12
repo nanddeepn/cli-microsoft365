@@ -13,6 +13,7 @@ import { sinonUtil } from '../../../../utils/sinonUtil.js';
 import commands from '../../commands.js';
 import command, { options } from './chat-message-list.js';
 import { settingsNames } from '../../../../settingsNames.js';
+import { z } from 'zod';
 
 describe(commands.CHAT_MESSAGE_LIST, () => {
 
@@ -134,8 +135,10 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
   let log: string[];
   let logger: Logger;
   let loggerLogSpy: sinon.SinonSpy;
+  let loggerLogToStderrSpy: sinon.SinonSpy;
   let commandInfo: CommandInfo;
   let commandOptionsSchema: typeof options;
+  let refinedSchema: z.ZodTypeAny;
 
   before(() => {
     sinon.stub(auth, 'restoreAuth').resolves();
@@ -146,6 +149,7 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
 
     commandInfo = cli.getCommandInfo(command);
     commandOptionsSchema = commandInfo.command.getSchemaToParse() as typeof options;
+    refinedSchema = commandInfo.command.getRefinedSchema!(commandOptionsSchema as any)!;
     sinon.stub(cli, 'getSettingWithDefaultValue').callsFake((settingName, defaultValue) => settingName === settingsNames.prompt ? false : defaultValue);
   });
 
@@ -163,6 +167,7 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
       }
     };
     loggerLogSpy = sinon.spy(logger, 'log');
+    loggerLogToStderrSpy = sinon.spy(logger, 'logToStderr');
   });
 
   afterEach(() => {
@@ -213,16 +218,93 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
 
   it('fails validation if the endDateTime is not valid', async () => {
     const actual = commandOptionsSchema.safeParse({
-      chatId: '19:2da4c29f6d7041eca70b638b43d45437',
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
       endDateTime: 'invalid date time'
     });
     assert.notStrictEqual(actual.success, true);
   });
 
-  it('validates for a correct input', async () => {
+  it('fails validation if the createdEndDateTime is not valid', async () => {
+    const actual = commandOptionsSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      createdEndDateTime: 'invalid date time'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if the modifiedStartDateTime is not valid', async () => {
+    const actual = commandOptionsSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      modifiedStartDateTime: 'not a date'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if the modifiedEndDateTime is not valid', async () => {
+    const actual = commandOptionsSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      modifiedEndDateTime: 'not a date'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if both endDateTime and createdEndDateTime are specified', async () => {
+    const actual = refinedSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      endDateTime: '2025-11-01T00:00:00Z',
+      createdEndDateTime: '2025-11-01T00:00:00Z'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if createdEndDateTime is combined with modifiedStartDateTime', async () => {
+    const actual = refinedSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      createdEndDateTime: '2025-11-01T00:00:00Z',
+      modifiedStartDateTime: '2025-10-01T00:00:00Z'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if createdEndDateTime is combined with modifiedEndDateTime', async () => {
+    const actual = refinedSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      createdEndDateTime: '2025-11-01T00:00:00Z',
+      modifiedEndDateTime: '2025-12-01T00:00:00Z'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('fails validation if endDateTime is combined with modifiedStartDateTime', async () => {
+    const actual = refinedSchema.safeParse({
+      chatId: '19:2da4c29f6d7041eca70b638b43d45437@thread.v2',
+      endDateTime: '2025-11-01T00:00:00Z',
+      modifiedStartDateTime: '2025-10-01T00:00:00Z'
+    });
+    assert.notStrictEqual(actual.success, true);
+  });
+
+  it('validates for a correct input with endDateTime', async () => {
     const actual = commandOptionsSchema.safeParse({
       chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
       endDateTime: "2022-11-01T00:00:00Z"
+    });
+    assert.strictEqual(actual.success, true);
+  });
+
+  it('validates for a correct input with createdEndDateTime', async () => {
+    const actual = commandOptionsSchema.safeParse({
+      chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+      createdEndDateTime: "2022-11-01T00:00:00Z"
+    });
+    assert.strictEqual(actual.success, true);
+  });
+
+  it('validates for a correct input with modifiedStartDateTime and modifiedEndDateTime', async () => {
+    const actual = commandOptionsSchema.safeParse({
+      chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+      modifiedStartDateTime: "2025-10-01T00:00:00Z",
+      modifiedEndDateTime: "2025-11-01T00:00:00Z"
     });
     assert.strictEqual(actual.success, true);
   });
@@ -248,7 +330,7 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
     assert(loggerLogSpy.calledWith(apiResponse));
   });
 
-  it('lists chat messages using endDateTime', async () => {
+  it('lists chat messages using deprecated endDateTime and shows deprecation warning', async () => {
     sinon.stub(request, 'get').callsFake(async (opts) => {
       if (opts.url === `https://graph.microsoft.com/v1.0/chats/19:2da4c29f6d7041eca70b638b43d45437@thread.v2/messages?$filter=createdDateTime lt 2025-11-01T00:00:00Z&$orderby=createdDateTime desc`) {
         return {
@@ -263,6 +345,92 @@ describe(commands.CHAT_MESSAGE_LIST, () => {
       options: {
         chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
         endDateTime: "2025-11-01T00:00:00Z"
+      }
+    });
+
+    assert(loggerLogSpy.calledWith(apiResponse));
+    assert(loggerLogToStderrSpy.calledWith(sinon.match(`Option 'endDateTime' is deprecated. Please use 'createdEndDateTime' instead.`)));
+  });
+
+  it('lists chat messages using createdEndDateTime', async () => {
+    sinon.stub(request, 'get').callsFake(async (opts) => {
+      if (opts.url === `https://graph.microsoft.com/v1.0/chats/19:2da4c29f6d7041eca70b638b43d45437@thread.v2/messages?$filter=createdDateTime lt 2025-11-01T00:00:00Z&$orderby=createdDateTime desc`) {
+        return {
+          value: [...apiResponse]
+        };
+      }
+
+      throw 'Invalid request';
+    });
+
+    await command.action(logger, {
+      options: {
+        chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+        createdEndDateTime: "2025-11-01T00:00:00Z"
+      }
+    });
+
+    assert(loggerLogSpy.calledWith(apiResponse));
+  });
+
+  it('lists chat messages using modifiedStartDateTime', async () => {
+    sinon.stub(request, 'get').callsFake(async (opts) => {
+      if (opts.url === `https://graph.microsoft.com/v1.0/chats/19:2da4c29f6d7041eca70b638b43d45437@thread.v2/messages?$filter=lastModifiedDateTime gt 2025-10-01T00:00:00Z&$orderby=lastModifiedDateTime desc`) {
+        return {
+          value: [...apiResponse]
+        };
+      }
+
+      throw 'Invalid request';
+    });
+
+    await command.action(logger, {
+      options: {
+        chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+        modifiedStartDateTime: "2025-10-01T00:00:00Z"
+      }
+    });
+
+    assert(loggerLogSpy.calledWith(apiResponse));
+  });
+
+  it('lists chat messages using modifiedEndDateTime', async () => {
+    sinon.stub(request, 'get').callsFake(async (opts) => {
+      if (opts.url === `https://graph.microsoft.com/v1.0/chats/19:2da4c29f6d7041eca70b638b43d45437@thread.v2/messages?$filter=lastModifiedDateTime lt 2025-12-01T00:00:00Z&$orderby=lastModifiedDateTime desc`) {
+        return {
+          value: [...apiResponse]
+        };
+      }
+
+      throw 'Invalid request';
+    });
+
+    await command.action(logger, {
+      options: {
+        chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+        modifiedEndDateTime: "2025-12-01T00:00:00Z"
+      }
+    });
+
+    assert(loggerLogSpy.calledWith(apiResponse));
+  });
+
+  it('lists chat messages using both modifiedStartDateTime and modifiedEndDateTime', async () => {
+    sinon.stub(request, 'get').callsFake(async (opts) => {
+      if (opts.url === `https://graph.microsoft.com/v1.0/chats/19:2da4c29f6d7041eca70b638b43d45437@thread.v2/messages?$filter=lastModifiedDateTime gt 2025-10-01T00:00:00Z and lastModifiedDateTime lt 2025-12-01T00:00:00Z&$orderby=lastModifiedDateTime desc`) {
+        return {
+          value: [...apiResponse]
+        };
+      }
+
+      throw 'Invalid request';
+    });
+
+    await command.action(logger, {
+      options: {
+        chatId: "19:2da4c29f6d7041eca70b638b43d45437@thread.v2",
+        modifiedStartDateTime: "2025-10-01T00:00:00Z",
+        modifiedEndDateTime: "2025-12-01T00:00:00Z"
       }
     });
 

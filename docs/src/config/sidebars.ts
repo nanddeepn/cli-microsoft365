@@ -1327,6 +1327,11 @@ const sidebars: SidebarsConfig = {
               type: 'doc',
               label: 'calendargroup list',
               id: 'cmd/outlook/calendargroup/calendargroup-list'
+            },
+            {
+              type: 'doc',
+              label: 'calendargroup set',
+              id: 'cmd/outlook/calendargroup/calendargroup-set'
             }
           ]
         },
@@ -1339,8 +1344,18 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'doc',
+              label: 'event cancel',
+              id: 'cmd/outlook/event/event-cancel'
+            },
+            {
+              type: 'doc',
               label: 'event list',
               id: 'cmd/outlook/event/event-list'
+            },
+            {
+              type: 'doc',
+              label: 'event remove',
+              id: 'cmd/outlook/event/event-remove'
             }
           ]
         },

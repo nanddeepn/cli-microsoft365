@@ -18,9 +18,24 @@ export const options = z.strictObject({
       error: e => `'${e.input}' is not a valid value for option chatId.`
     })
     .alias('i'),
+  createdEndDateTime: z.string()
+    .refine(time => validation.isValidISODateTime(time), {
+      error: e => `'${e.input}' is not a valid ISO date-time string for option createdEndDateTime.`
+    })
+    .optional(),
   endDateTime: z.string()
     .refine(time => validation.isValidISODateTime(time), {
       error: e => `'${e.input}' is not a valid ISO date-time string for option endDateTime.`
+    })
+    .optional(),
+  modifiedStartDateTime: z.string()
+    .refine(time => validation.isValidISODateTime(time), {
+      error: e => `'${e.input}' is not a valid ISO date-time string for option modifiedStartDateTime.`
+    })
+    .optional(),
+  modifiedEndDateTime: z.string()
+    .refine(time => validation.isValidISODateTime(time), {
+      error: e => `'${e.input}' is not a valid ISO date-time string for option modifiedEndDateTime.`
     })
     .optional()
 });
@@ -47,14 +62,44 @@ class TeamsChatMessageListCommand extends GraphCommand {
     return options;
   }
 
+  public getRefinedSchema(schema: typeof options): z.ZodObject<any> | undefined {
+    return schema
+      .refine(options => !(options.endDateTime && options.createdEndDateTime), {
+        error: 'Specify either endDateTime or createdEndDateTime, but not both.'
+      })
+      .refine(options => !(options.createdEndDateTime && (options.modifiedStartDateTime || options.modifiedEndDateTime)), {
+        error: 'You cannot combine createdEndDateTime with modifiedStartDateTime or modifiedEndDateTime. These filters operate on different properties.'
+      })
+      .refine(options => !(options.endDateTime && (options.modifiedStartDateTime || options.modifiedEndDateTime)), {
+        error: 'You cannot combine endDateTime with modifiedStartDateTime or modifiedEndDateTime. These filters operate on different properties.'
+      });
+  }
+
   public async commandAction(logger: Logger, args: CommandArgs): Promise<void> {
+    if (args.options.endDateTime) {
+      await this.warn(logger, `Option 'endDateTime' is deprecated. Please use 'createdEndDateTime' instead.`);
+
+      args.options.createdEndDateTime = args.options.endDateTime;
+    }
+
     try {
       let apiUrl = `${this.resource}/v1.0/chats/${args.options.chatId}/messages`;
 
-      if (args.options.endDateTime) {
-        // You can only filter results if the request URL contains the $orderby and $filter query parameters configured for the same property;
-        // otherwise, the $filter query option is ignored.
-        apiUrl += `?$filter=createdDateTime lt ${args.options.endDateTime}&$orderby=createdDateTime desc`;
+      if (args.options.createdEndDateTime) {
+        apiUrl += `?$filter=createdDateTime lt ${args.options.createdEndDateTime}&$orderby=createdDateTime desc`;
+      }
+      else if (args.options.modifiedStartDateTime || args.options.modifiedEndDateTime) {
+        const filters: string[] = [];
+
+        if (args.options.modifiedStartDateTime) {
+          filters.push(`lastModifiedDateTime gt ${args.options.modifiedStartDateTime}`);
+        }
+
+        if (args.options.modifiedEndDateTime) {
+          filters.push(`lastModifiedDateTime lt ${args.options.modifiedEndDateTime}`);
+        }
+
+        apiUrl += `?$filter=${filters.join(' and ')}&$orderby=lastModifiedDateTime desc`;
       }
 
       const items = await odata.getAllItems<ExtendedMessage>(apiUrl);
